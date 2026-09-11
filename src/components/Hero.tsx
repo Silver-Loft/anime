@@ -1,5 +1,6 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
+import { Play } from "lucide-react";
 import { useAnime } from "../context/AnimeContext";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -20,7 +21,7 @@ function Line({ children, delay, className }: { children: React.ReactNode; delay
 }
 
 export default function Hero() {
-  const { record, ratings } = useAnime();
+  const { record, ratings, openVideoPlayer } = useAnime();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const yTitle = useTransform(scrollYProgress, [0, 1], [0, 180]);
@@ -110,7 +111,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 1.35, ease: EASE }}
-          className="mt-10 flex items-center gap-8"
+          className="mt-10 flex flex-wrap items-center justify-center gap-4 md:gap-8"
         >
           <a
             href="#transmission"
@@ -122,7 +123,15 @@ export default function Hero() {
           >
             OPEN THE RECORD
           </a>
-          <div className="hidden items-center gap-3 font-mono text-[10px] tracking-[0.3em] text-smoke sm:flex">
+          <button
+            type="button"
+            onClick={() => openVideoPlayer(0)}
+            className="group flex items-center gap-2.5 border border-gold bg-gold/10 px-8 py-3.5 font-mono text-[10px] tracking-[0.35em] text-gold transition-colors duration-500 hover:bg-gold hover:text-abyss shadow-[0_0_20px_rgba(200,162,75,0.15)]"
+          >
+            <Play className="h-3 w-3 fill-current transition-transform group-hover:scale-110" />
+            PLAY PROLOGUE
+          </button>
+          <div className="hidden items-center gap-3 font-mono text-[10px] tracking-[0.3em] text-smoke lg:flex">
             <span className="animate-pulse-glow h-1.5 w-1.5 rounded-full bg-gold" />
             PERMANENT RATING {ratings[0]?.value?.toFixed(2) || "8.16"}
           </div>
