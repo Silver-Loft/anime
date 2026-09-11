@@ -137,9 +137,9 @@ export default function Hero() {
         className="relative border-t border-line-soft"
       >
         <div className="mx-auto grid max-w-[1600px] grid-cols-2 gap-4 px-5 py-5 font-mono text-[9px] tracking-[0.3em] text-smoke md:grid-cols-4 md:px-10 md:text-[10px]">
-          <span>MAIN — {RECORD.mainTitle.toUpperCase()}</span>
-          <span className="hidden md:inline">EN — {RECORD.enTitle.toUpperCase()}</span>
-          <span className="hidden md:inline">AIRED — {RECORD.startDate.replace(/-/g, ".")} → {RECORD.endDate.replace(/-/g, ".")}</span>
+          <span>MAIN — {record.mainTitle.toUpperCase()}</span>
+          <span className="hidden md:inline">EN — {record.enTitle.toUpperCase()}</span>
+          <span className="hidden md:inline">AIRED — {record.startDate.replace(/-/g, ".")} → {record.endDate.replace(/-/g, ".")}</span>
           <span className="flex items-center justify-end gap-3 text-right">
             DESCEND
             <span className="relative h-8 w-px overflow-hidden bg-line">

@@ -71,12 +71,12 @@ export default function Transmission() {
         <div className="lg:col-span-8">
           <Reveal>
             <p className="max-w-3xl font-display text-[clamp(1.7rem,3.4vw,3rem)] font-light leading-[1.25] text-ice">
-              {RECORD.basedOn}. {RECORD.description}
+              {record.basedOn}. {record.description}
             </p>
           </Reveal>
           <Reveal delay={0.1}>
             <p className="mt-8 max-w-2xl text-lg font-light leading-relaxed text-mist">
-              {RECORD.description2}
+              {record.description2}
             </p>
           </Reveal>
 
