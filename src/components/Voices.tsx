@@ -3,7 +3,8 @@ import type { Voice } from "../data/anime";
 import { Reveal, SectionHead } from "./ui";
 import { useAnime } from "../context/AnimeContext";
 
-function VoiceCard({ v, delay, hero = false }: { v: Voice; delay: number; hero?: boolean }) {
+function VoiceCard({ v, delay, hero = false }: { v?: Voice; delay: number; hero?: boolean }) {
+  if (!v) return null;
   const mustSee = v.kind === "Must See";
   return (
     <Reveal delay={delay} className={hero ? "md:col-span-2" : ""}>
@@ -70,7 +71,7 @@ export default function Voices() {
 
       <Reveal delay={0.2}>
         <div className="mt-12 text-center font-mono text-[9px] tracking-[0.3em] text-smoke">
-          OF {VOICES.length} DISPLAYED TRANSCRIPTS — THE ARCHIVE HOLDS 20 IN TOTAL
+          OF {voices.length} DISPLAYED TRANSCRIPTS — THE ARCHIVE HOLDS 20 IN TOTAL
         </div>
       </Reveal>
     </section>
