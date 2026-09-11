@@ -45,71 +45,102 @@ export async function fetchAniDbAnime(
     }
   }
 
-  // 1. Direct URL as requested
-  const url = new URL("http://api.anidb.net:9001/httpapi");
-  url.searchParams.set("request", "anime");
-  url.searchParams.set("client", "silverloft");
-  url.searchParams.set("clientver", "1");
-  url.searchParams.set("protover", "1");
-  url.searchParams.set("aid", aid.toString());
-
-  console.log(`[AniDB] Fetching real data for aid=${aid} from ${url.toString()}...`);
-
+  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
   let xmlData: string | null = null;
-  let source: "live-direct" | "live-proxy" = "live-direct";
+  let source: "live-direct" | "live-proxy" | "cache" = "live-direct";
 
-  try {
-    const res = await fetch(url.toString(), {
-      method: "GET",
-      headers: {
-        Accept: "text/xml, application/xml, */*",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error(`AniDB direct fetch responded with HTTP ${res.status} ${res.statusText}`);
-    }
-
-    xmlData = await res.text();
-    // Required console.log as specified in user request:
-    console.log(xmlData);
-  } catch (directError) {
-    console.warn("[AniDB] Direct fetch failed (likely browser port 9001/mixed-content restriction). Trying proxy...", directError);
-
-    // 2. Fallback to Vite dev server proxy (/anidb-api/httpapi)
+  // 1. If running on HTTPS (e.g. Vercel deployment), browsers block http:// mixed content.
+  // We use our Vercel /api/anidb serverless proxy to securely fetch AniDB over HTTPS.
+  if (isHttps) {
     try {
-      const proxyUrl = new URL("/anidb-api/httpapi", window.location.origin);
-      proxyUrl.searchParams.set("request", "anime");
-      proxyUrl.searchParams.set("client", "silverloft");
-      proxyUrl.searchParams.set("clientver", "1");
-      proxyUrl.searchParams.set("protover", "1");
-      proxyUrl.searchParams.set("aid", aid.toString());
+      const vercelUrl = new URL("/api/anidb", window.location.origin);
+      vercelUrl.searchParams.set("request", "anime");
+      vercelUrl.searchParams.set("client", "silverloft");
+      vercelUrl.searchParams.set("clientver", "1");
+      vercelUrl.searchParams.set("protover", "1");
+      vercelUrl.searchParams.set("aid", aid.toString());
 
-      const res = await fetch(proxyUrl.toString());
+      console.log(`[AniDB] HTTPS detected (Vercel). Fetching via /api/anidb for aid=${aid}...`);
+      const res = await fetch(vercelUrl.toString());
+      if (res.ok) {
+        xmlData = await res.text();
+        source = "live-proxy";
+        // Required console.log as specified in user request:
+        console.log(xmlData);
+      }
+    } catch (err) {
+      console.warn("[AniDB] Vercel HTTPS proxy failed, trying fallbacks...", err);
+    }
+  }
+
+  // 2. Direct URL as requested (works on http://localhost)
+  if (!xmlData) {
+    const url = new URL("http://api.anidb.net:9001/httpapi");
+    url.searchParams.set("request", "anime");
+    url.searchParams.set("client", "silverloft");
+    url.searchParams.set("clientver", "1");
+    url.searchParams.set("protover", "1");
+    url.searchParams.set("aid", aid.toString());
+
+    console.log(`[AniDB] Fetching real data for aid=${aid} from ${url.toString()}...`);
+
+    try {
+      const res = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          Accept: "text/xml, application/xml, */*",
+        },
+      });
+
       if (!res.ok) {
-        throw new Error(`AniDB proxy fetch responded with HTTP ${res.status} ${res.statusText}`);
+        throw new Error(`AniDB direct fetch responded with HTTP ${res.status} ${res.statusText}`);
       }
 
       xmlData = await res.text();
-      source = "live-proxy";
       // Required console.log as specified in user request:
       console.log(xmlData);
-    } catch (proxyError) {
-      console.warn("[AniDB] Direct and proxy fetches failed. Attempting local bundled XML fallback...", proxyError);
-      try {
-        const localRes = await fetch(`/anidb_aid${aid}.xml`);
-        if (localRes.ok) {
-          xmlData = await localRes.text();
-          source = "cache";
-          console.log(xmlData);
-        } else {
-          throw new Error("Local XML fallback not found");
+    } catch (directError) {
+      console.warn("[AniDB] Direct fetch failed. Trying proxies and local cache...", directError);
+
+      // 3. Try /api/anidb or Vite dev server proxy (/anidb-api/httpapi)
+      const proxies = ["/api/anidb", "/anidb-api/httpapi"];
+      for (const proxyPath of proxies) {
+        try {
+          const proxyUrl = new URL(proxyPath, window.location.origin);
+          proxyUrl.searchParams.set("request", "anime");
+          proxyUrl.searchParams.set("client", "silverloft");
+          proxyUrl.searchParams.set("clientver", "1");
+          proxyUrl.searchParams.set("protover", "1");
+          proxyUrl.searchParams.set("aid", aid.toString());
+
+          const res = await fetch(proxyUrl.toString());
+          if (res.ok) {
+            xmlData = await res.text();
+            source = "live-proxy";
+            console.log(xmlData);
+            break;
+          }
+        } catch {
+          // try next proxy
         }
-      } catch {
-        console.error("[AniDB] All fetch attempts failed.");
-        throw new Error(
-          `Failed to fetch AniDB data: ${(proxyError as Error).message || (directError as Error).message}`
-        );
+      }
+
+      // 4. Bundled fallback XML if network fails
+      if (!xmlData) {
+        try {
+          const localRes = await fetch(`/anidb_aid${aid}.xml`);
+          if (localRes.ok) {
+            xmlData = await localRes.text();
+            source = "cache";
+            console.log(xmlData);
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (!xmlData) {
+        throw new Error("Unable to fetch AniDB data. Please check network connection.");
       }
     }
   }

@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
+import { Play } from "lucide-react";
 import { Reveal, SectionHead } from "./ui";
 import { useAnime } from "../context/AnimeContext";
 
 export default function MissionLog() {
-  const { episodes, record } = useAnime();
+  const { episodes, record, openVideoPlayer } = useAnime();
   const best = episodes.length
     ? episodes.reduce((a, b) => (b.rating > a.rating ? b : a))
     : { no: 1, rating: 0 };
@@ -50,7 +51,7 @@ export default function MissionLog() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-4% 0px" }}
             transition={{ duration: 0.7, delay: Math.min(i * 0.04, 0.3), ease: [0.22, 1, 0.36, 1] }}
-            className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-4 border-b border-line-soft px-2 py-6 transition-colors duration-500 hover:bg-hull/70 md:grid-cols-[5rem_1fr_auto_auto] md:gap-8 md:px-6"
+            className="group relative grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 border-b border-line-soft px-2 py-6 transition-colors duration-500 hover:bg-hull/70 md:grid-cols-[5rem_1fr_auto_auto_auto] md:gap-8 md:px-6"
             data-hover
           >
             {/* number */}
@@ -87,7 +88,7 @@ export default function MissionLog() {
             </div>
 
             {/* rating */}
-            <div className="w-24 text-right md:w-40">
+            <div className="w-20 text-right md:w-32">
               <div className="font-mono text-xs text-ice tabular">{ep.rating.toFixed(2)}</div>
               <div className="mt-2 h-px w-full bg-line">
                 <div
@@ -95,6 +96,19 @@ export default function MissionLog() {
                   style={{ transform: `scaleX(${ep.rating / 10})` }}
                 />
               </div>
+            </div>
+
+            {/* stream / play sortie */}
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => openVideoPlayer(ep.no)}
+                className="flex items-center gap-1.5 border border-line-soft bg-void/80 px-2.5 py-1 font-mono text-[9px] tracking-wider text-smoke transition-all duration-300 hover:border-gold hover:bg-gold hover:text-abyss group-hover:border-gold/50 group-hover:text-ice"
+                title={`Launch player for Sortie ${ep.no}`}
+              >
+                <Play className="h-2.5 w-2.5 fill-current text-gold" />
+                <span className="hidden sm:inline">PLAY</span>
+              </button>
             </div>
           </motion.div>
         ))}

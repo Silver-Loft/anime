@@ -47,6 +47,10 @@ export interface AnimeContextValue {
   fetchAnime: (aid?: number, forceRefresh?: boolean) => Promise<void>;
   showXmlModal: boolean;
   setShowXmlModal: (show: boolean) => void;
+  showVideoModal: boolean;
+  setShowVideoModal: (show: boolean) => void;
+  selectedVideoEp: number;
+  openVideoPlayer: (epNo?: number) => void;
 }
 
 const AnimeContext = createContext<AnimeContextValue | undefined>(undefined);
@@ -73,6 +77,13 @@ export function AnimeProvider({ children }: { children: ReactNode }) {
   const [source, setSource] = useState<"live-direct" | "live-proxy" | "cache" | "default">("default");
   const [currentAid, setCurrentAid] = useState<number>(1);
   const [showXmlModal, setShowXmlModal] = useState<boolean>(false);
+  const [showVideoModal, setShowVideoModal] = useState<boolean>(false);
+  const [selectedVideoEp, setSelectedVideoEp] = useState<number>(0);
+
+  const openVideoPlayer = useCallback((epNo: number = 0) => {
+    setSelectedVideoEp(epNo);
+    setShowVideoModal(true);
+  }, []);
 
   const fetchAnime = useCallback(
     async (aid: number = 1, forceRefresh: boolean = false) => {
@@ -124,6 +135,10 @@ export function AnimeProvider({ children }: { children: ReactNode }) {
     fetchAnime,
     showXmlModal,
     setShowXmlModal,
+    showVideoModal,
+    setShowVideoModal,
+    selectedVideoEp,
+    openVideoPlayer,
   };
 
   return <AnimeContext.Provider value={value}>{children}</AnimeContext.Provider>;

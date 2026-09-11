@@ -14,7 +14,44 @@ import Allied from "./components/Allied";
 import Voices from "./components/Voices";
 import Lineage from "./components/Lineage";
 import XmlViewerModal from "./components/XmlViewerModal";
-import { AnimeProvider } from "./context/AnimeContext";
+import VideoPlayerModal from "./components/VideoPlayerModal";
+import { AnimeProvider, useAnime } from "./context/AnimeContext";
+
+function MainContent() {
+  const { showVideoModal, setShowVideoModal, selectedVideoEp } = useAnime();
+
+  return (
+    <div className="grain relative min-h-svh bg-abyss text-ice">
+      <Starfield />
+      <Cursor />
+      <Nav />
+
+      <main className="relative z-10">
+        <Hero />
+        <Ticker />
+        <Transmission />
+        <Verdict />
+        <div className="mx-auto max-w-[1600px] px-5 md:px-10">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/25 to-transparent" />
+        </div>
+        <Personnel />
+        <MissionLog />
+        <Ticker reverse />
+        <Spectrum />
+        <Allied />
+        <Voices />
+        <Lineage />
+      </main>
+
+      <XmlViewerModal />
+      <VideoPlayerModal
+        isOpen={showVideoModal}
+        onClose={() => setShowVideoModal(false)}
+        initialEpisodeNo={selectedVideoEp}
+      />
+    </div>
+  );
+}
 
 export default function App() {
   useEffect(() => {
@@ -45,30 +82,7 @@ export default function App() {
 
   return (
     <AnimeProvider>
-      <div className="grain relative min-h-svh bg-abyss text-ice">
-        <Starfield />
-        <Cursor />
-        <Nav />
-
-        <main className="relative z-10">
-          <Hero />
-          <Ticker />
-          <Transmission />
-          <Verdict />
-          <div className="mx-auto max-w-[1600px] px-5 md:px-10">
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/25 to-transparent" />
-          </div>
-          <Personnel />
-          <MissionLog />
-          <Ticker reverse />
-          <Spectrum />
-          <Allied />
-          <Voices />
-          <Lineage />
-        </main>
-
-        <XmlViewerModal />
-      </div>
+      <MainContent />
     </AnimeProvider>
   );
 }

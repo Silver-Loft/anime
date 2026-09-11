@@ -111,6 +111,9 @@ The parser in `src/utils/parseAniDbXml.ts` maps AniDB XML elements to reactive T
 ## Key Features
 
 - **Real-Time Data Ingestion**: Automatically calls the AniDB API on load and logs the complete raw XML payload to the console.
+- **Vercel Serverless HTTPS Proxy**: Pre-configured serverless function at `/api/anidb` enabling HTTPS deployments on Vercel to fetch AniDB XML without browser mixed-content blocks.
+- **Embedded Video Player & Hologram Theatre**: Watch official trailers, series prologue, and previews directly on-site with quick sortie switching.
+- **Official Anime Streaming Integration**: Direct stream links to Crunchyroll and licensed platforms mapped from AniDB resource identifiers.
 - **Raw XML Viewer Terminal**: Built-in modal accessible via the navigation header (`VIEW XML`) allowing inspection of the live transmission, single-click clipboard copying, and manual re-fetching.
 - **Live Status Indicator**: Visual header badge signaling connection state (`LIVE DATA`, `FETCHING...`, or `STANDBY`).
 - **Rate-Limiting Protection**: Automatic session storage caching prevents triggering AniDB's temporary IP bans during rapid page reloads.
@@ -149,7 +152,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser. The browser
 npm run build
 ```
 
-Generates a single self-contained production bundle in `dist/index.html`.
+Generates a production build in `dist/index.html`.
 
 ```bash
 npm run preview
@@ -157,10 +160,26 @@ npm run preview
 
 ---
 
-## CORS & Network Fallbacks
+## AniDB API vs Video Streaming
 
-The AniDB HTTP API (`http://api.anidb.net:9001/httpapi`) emits `Access-Control-Allow-Origin: *`. However, for browser environments with non-standard port restrictions or mixed-content policies, the following fallback chain is in place:
+AniDB is an encyclopedic and community metadata database (similar to IMDb or MusicBrainz). It catalogs:
+- Series ratings, review scores, permanent & temporary votes
+- Episode lists, runtimes, broadcast dates, multilingual titles
+- Character profiles, voice actors, and production staff
+- Official platform resource IDs (e.g., Crunchyroll series ID `GVDHX8QXW`)
 
-1. **Direct Request**: Calls `http://api.anidb.net:9001/httpapi?...` directly.
-2. **Vite Dev Server Proxy**: Falls back to `/anidb-api/httpapi?...` configured in `vite.config.ts`.
-3. **Local Bundled XML**: Falls back to `/anidb_aid1.xml` if network connectivity is unavailable.
+**AniDB does not host or stream copyrighted video files.** To enable watching anime on the site, the app includes:
+1. Embedded video player modal with official trailers & prologue.
+2. Direct episode sortie buttons (`PLAY`) launching the video viewer.
+3. Stream links to licensed streaming providers (Crunchyroll / RetroCrush) extracted from the AniDB resource catalog.
+
+---
+
+## CORS, Vercel & Network Fallbacks
+
+The AniDB HTTP API (`http://api.anidb.net:9001/httpapi`) emits `Access-Control-Allow-Origin: *`. However, when deployed to HTTPS origins like Vercel, browsers block requests to plain `http://` under the **Mixed Content Policy**. The following multi-tier fallback architecture is implemented:
+
+1. **Vercel Serverless Function (`/api/anidb`)**: When on HTTPS (e.g. `*.vercel.app`), the client calls `/api/anidb?aid=1`. Node.js on Vercel fetches from `http://api.anidb.net:9001/httpapi` server-side with no mixed-content restrictions and caches responses.
+2. **Direct Request**: On local HTTP origins (`http://localhost`), calls `http://api.anidb.net:9001/httpapi?...` directly.
+3. **Vite Dev Server Proxy**: Falls back to `/anidb-api/httpapi?...` configured in `vite.config.ts`.
+4. **Local Bundled XML**: Falls back to `/anidb_aid1.xml` if all network connectivity is unavailable.
